@@ -36,6 +36,9 @@
                 <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>          <!-- tell hibernate what db language to use -->
                 <prop key="hibernate.show_sql">true</prop>                                        <!-- Print all executed SQL to stdout -->
                 <prop key="hibernate.hbm2ddl.auto">create</prop>                                  <!-- Drop and re-create database schema on startup. DON'T USE IN PRODUCTION, as it will remove all data -->
+                <prop key="hibernate.cache.use_second_level_cache">true</prop>
+                <prop key="hibernate.cache.use_query_cache">true</prop>
+                <prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
             </props>
         </property>
     </bean>

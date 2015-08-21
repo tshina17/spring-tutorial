@@ -1,8 +1,10 @@
 package tk.wanxie.jdbc;
 
+import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import tk.wanxie.jdbc.dao.HibernateDaoImpl;
@@ -36,8 +38,8 @@ public class App {
         Session session = dao.getSessionFactory().openSession();
         session.beginTransaction();
 
-        //dao.insertCircle(new Circle(1, "First circle"));
-        //System.out.println(dao.getCircleCount());
+        dao.insertCircle(new Circle(1, "First circle"));
+        System.out.println(dao.getCircleCount());
 
         Address addr = new Address("123 main street", "San Jose", "CA", "94223");
         Address addr2 = new Address("123 abc street", "San Francisco", "CA", "94203");
@@ -135,6 +137,11 @@ public class App {
 
         user1.setUsername("Update First user name");
 
+        System.out.println("--------Caching--------");
+        session.get(Circle.class, 1);
+        //session.createQuery("from User WHERE userId = :user_id").setInteger("user_id", 1).setCacheable(true).list();
+        System.out.println("-----------------------");
+
         session.getTransaction().commit();
         session.close();
 
@@ -151,6 +158,8 @@ public class App {
 
         session2.update(user1);                 // do a select than update because of @SelectBeforeUpdate
 
+
+        // Query by HQL
         Query query = session2.createQuery("from User where userId > :user_id");    // HQL, User is the class name, userId is the field name
         query.setInteger("user_id", 0);                                             // bind the parameter, better to bind with name than index
         query.setFirstResult(1);                                                    // similar to mysql offset, used for pagination
@@ -169,8 +178,42 @@ public class App {
         Query query4 = session2.createQuery("select new Vehicle(username) from User");           // this will create a list of vehicle with the appropriate constructor
         List<Vehicle> vehicles = query4.list();
 
-        Query query5 = session2.getNamedQuery("CreditCard.byId").setInteger("card_id", 2);      // using named query defined in the Entity class
+
+        // Query by @NamedQuery or @NamedNativeQuery
+        Query query5 = session2.getNamedQuery("CreditCard.byId").setInteger("card_id", 2);      // using named query defined in the CreditCard class
         List<CreditCard> cards = query5.list();
+
+        Query query6 = session2.getNamedQuery("CreditCard.byNumber").setString("number", "%XXXX%");      // using named native query defined in the CreditCard class
+        List<CreditCard> cards_ = query6.list();
+
+
+        // Query by Criteria
+        Criteria criteria = session2.createCriteria(TwoWheeler.class);                  // using criteria is another way of query from the database
+        criteria.add(Restrictions.eq("steeringHandle", "Bike Steering Handle"))         // make sure to use field name not column name
+                .add(Restrictions.or(Restrictions.between("vehicleId", 1, 5), Restrictions.between("vehicleId", 5, 10)));       // ___ = ___ AND (___ BETWEEN ___ OR ___ BETWEEN ___);
+        List<TwoWheeler> bikes = criteria.list();
+
+        Criteria criteria2 = session2.createCriteria(User.class)
+            .setProjection(Projections.property("userId"))                      // return an array of all the user_id
+            .setProjection(Projections.max("userId"))                           // return the max user_id
+            .addOrder(Order.desc("userId"));                                    // add ORDER BY to the query
+        System.out.println(criteria2.list());
+
+
+        // Query by Example
+        CreditCard exampleCard = new CreditCard();
+        exampleCard.setCardId(3);                                               // don't have to set the primary key
+        exampleCard.setCardNumber("XXXX-XXXX-XXXX%");
+
+        Example example = Example.create(exampleCard).excludeProperty("cardId").enableLike();           // this will do a like query
+        Criteria criteria3 = session2.createCriteria(CreditCard.class)
+                .add(example);
+        System.out.println(criteria3.list());
+
+        System.out.println("--------Caching--------");
+        session2.get(Circle.class, 1);                      // already select from session 1, so this will not do a select statement because of second level caching
+        //session2.createQuery("from User WHERE userId = :user_id").setInteger("user_id", 1).setCacheable(true).list();
+        System.out.println("-----------------------");
 
         session2.getTransaction().commit();
         session2.close();
@@ -184,6 +227,10 @@ public class App {
         username_id.forEach(s -> System.out.println(s[0] + " - " + s[1]));
         vehicles.forEach(s -> System.out.println(s));
         cards.forEach(s -> System.out.println(s));
+        cards_.forEach(s -> System.out.println(s));
+
+        System.out.println("");
+        bikes.forEach(s -> System.out.println(s));
     }
 
 }

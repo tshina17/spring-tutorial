@@ -1,8 +1,10 @@
 package tk.wanxie.jdbc.model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-                                                    // Better to use @Entity and @Table(name="circles")
+// Better to use @Entity and @Table(name="circles")
 @Entity(name="circles")                             // same as @Entity and @Table(name="circles") together, but also change the Circle class name to circles instead of Circle
 public class Circle {
 

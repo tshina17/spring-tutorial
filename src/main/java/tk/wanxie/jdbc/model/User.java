@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Date;
 
 @Entity                                 // used with hibernate to define as an Model
+//@Cacheable                              // used for second level caching
+//@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)            // if READ_ONLY, hibernate will return the cache object if there is one regardless of any update
 @DynamicUpdate                          // if is true, only fields with changes will be updated when session.update() is called, otherwise even no change will also call an update statement
 @SelectBeforeUpdate                     // select the object from db before update to make it persistent, with @DynamicUpdate only changed columns will be updated, otherwise all columns will be updated even with one column change
 @Table(name="user")                     // @Table only change the table name, not the class name, where as @Entity(name="users") also change the class name used in hql

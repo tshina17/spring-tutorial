@@ -6,7 +6,13 @@ import org.hibernate.annotations.NotFoundAction;
 import javax.persistence.*;
 
 @Entity
-@NamedQuery(name="CreditCard.byId", query="from CreditCard where cardId = :card_id")           // can be used for common query, best practice to use Entity name for name
+@NamedQuery(name="CreditCard.byId", query="from CreditCard where cardId = :card_id")            // can be used for common query, best practice to use Entity name for name
+@NamedNativeQuery(                                                                              // can also use native sql query, default return Object if resultClass not set
+    name="CreditCard.byNumber",                                                                 // if resultClass is set, must select column for all the field even if have to join other tables
+    query="SELECT * FROM credit_card LEFT JOIN user_credit_card " +                             // Select * From credit_card will not work here because user_id is missing for field User,
+            "ON credit_card.card_id = user_credit_card.card_id " +                              // therefore, a join is needed
+            "WHERE credit_card.card_number LIKE :number",
+    resultClass=CreditCard.class)
 @Table(name="credit_card")
 public class CreditCard {
 
