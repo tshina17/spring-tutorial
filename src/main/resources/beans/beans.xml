@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+       default-init-method="beforeInit" default-destroy-method="afterInit"> <!-- define default init and destroy method for all beans -->
+
+    <!-- annotation shortcut, use this for all types of annotation instead of defining for each annotation type like below -->
+    <context:annotation-config/>
+    <!--
+    <bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"/>
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+    -->
+
+    <!-- scan the package for bean defined by annotation like @component that didn't define here -->
+    <context:component-scan base-package="tk.wanxie.spring"/>
+
+    <!-- Bean Inheritance defining parent bean -->
+    <bean id="personAbstract" class="tk.wanxie.spring.Person" abstract="true">  <!-- set abstract to true if don't want to initialize this bean -->
+        <!-- Object Injection, referencing another bean -->
+        <property name="address" ref="address"/>
+    </bean>
+
+
+    <!-- Each bean represents a class -->
+    <bean id="person" class="tk.wanxie.spring.Person" parent="personAbstract">  <!-- inheritance property "address" from parent -->
+        <!-- Values passing to the appropriate constructor -->
+        <constructor-arg name="id" type="int" value="777"/>
+        <constructor-arg name="name" type="java.lang.String" value="Wan"/>
+
+        <!-- Property is used if there is a setter method for the name attribute -->
+        <!-- using placehold that defined in beans.properties file -->
+        <property name="taxId" value="${taxId.value}"/>
+
+        <property name="address2">
+            <!-- Inner bean, use if only needed for this bean only -->
+            <bean class="tk.wanxie.spring.Address">
+                <constructor-arg name="street" value="${address2.street}"/>
+                <constructor-arg name="postcode" value="98785"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="address" class="tk.wanxie.spring.Address">
+        <constructor-arg name="street" value="123 main street"/>
+        <constructor-arg name="postcode" value="94321"/>
+    </bean>
+
+    <bean id="address3" class="tk.wanxie.spring.Address">
+        <constructor-arg name="street" value="68 Drusk street"/>
+        <constructor-arg name="postcode" value="94336"/>
+    </bean>
+
+    <!-- alias for the person bean -->
+    <alias name="person" alias="man"/>
+
+    <!-- scope="prototype" will create a new bean every time getBean is called, while singleton use the same bean again -->
+    <bean id="person2" class="tk.wanxie.spring.Person" scope="prototype">
+        <constructor-arg name="id" type="int" value="78"/>
+        <constructor-arg name="name" type="java.lang.String" value="Xie"/>
+        <property name="address" ref="address3"/>
+    </bean>
+
+    <!-- Create a list of collection -->
+    <bean id="classroomAbstract" class="tk.wanxie.spring.Classroom">
+        <property name="students">
+            <list>
+                <ref bean="person"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- init-method called before initialize this bean and destroy-method called after destroy this bean  -->
+    <bean id="classroom" class="tk.wanxie.spring.Classroom" parent="classroomAbstract" init-method="init" destroy-method="cleanUp">
+        <property name="students">      <!-- name must be the same as parent for list to merge -->
+            <list merge="true">         <!-- merge with the parent list, if false will override the list -->
+                <ref bean="person2"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="creature" class="tk.wanxie.spring.Animal">
+        <property name="location" value="Africa"/>
+    </bean>
+
+    <!-- @Autowired for creature which not defining a type -->
+    <bean id="cat" class="java.lang.String">
+        <constructor-arg value="Cat"/>
+    </bean>
+
+    <bean id="horse" class="java.lang.String">
+        <constructor-arg value="Horse"/>
+    </bean>
+
+    <bean id="location" class="java.lang.String">
+        <constructor-arg value="454 Bigs Ave"/>
+    </bean>
+
+    <!-- Autowire (not useful if a lot of beans defined), don't have to define properties if name of property is the same as bean id -->
+    <!-- byType only works if there is one property and one bean of the class defined, same for autowire="constructor" -->
+    <bean id="person3" class="tk.wanxie.spring.Person" autowire="byName"/>
+
+    <!-- define a class implements BeanPostProcessor to call methods before and after initializing each bean -->
+    <bean class="tk.wanxie.spring.DisplayNameBeanPostProcessor"/>
+
+    <!-- method call when a bean factory or application context is initialized -->
+    <bean class="tk.wanxie.spring.MyBeanFactoryPostProcessor"/>
+
+    <!-- define the location for the placeholder properties file -->
+    <bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+        <property name="location" value="beans/beans.properties"/>
+    </bean>
+
+    <!-- define the bean used for getMessage from application context -->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>mymessages</value>
+            </list>
+        </property>
+    </bean>
+</beans>

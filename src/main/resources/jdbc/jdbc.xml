@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="tk.wanxie.jdbc"/>
+
+    <bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+        <property name="location" value="jdbc/jdbc.properties"/>
+    </bean>
+
+    <!-- Don't use org.springframework.jdbc.datasource.DriverManagerDataSource b/c it create a new connection for each call -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!--
+        <property name="initialSize" value="2"/>                            // # of db connections at startup
+        <property name="maxActive" value="5"/>                              // max # of active connections
+        -->
+    </bean>
+
+    <!-- NamedParameterJdbcDaoImpl cannot autowired dataSource in the source code since only parent has access, so have autowired in the xml file -->
+    <bean id="namedParameterJdbcDao" class="tk.wanxie.jdbc.dao.NamedParameterJdbcDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan" value="tk.wanxie.jdbc.model"/>                  <!-- this can be a list of packages, no need to use mapping, will scan all @Entity -->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>          <!-- tell hibernate what db language to use -->
+                <prop key="hibernate.show_sql">true</prop>                                        <!-- Print all executed SQL to stdout -->
+                <prop key="hibernate.hbm2ddl.auto">create</prop>                                  <!-- Drop and re-create database schema on startup. DON'T USE IN PRODUCTION, as it will remove all data -->
+            </props>
+        </property>
+    </bean>
+
+
+</beans>

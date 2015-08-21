@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="tk.wanxie.springAop"/>
+
+    <aop:aspectj-autoproxy/>
+
+    <aop:config>
+        <!-- This replaces the @Aspect annotation in the class -->
+        <aop:aspect id="loggingAspectXml" ref="loggingAspectXml">
+
+            <!-- This is the same as defining a pointcut created using a dummy method -->
+            <aop:pointcut id="allToString" expression="execution(* toString(..))"/>
+
+            <!-- This assign an advice method to the pointcut -->
+            <aop:around method="myAroundAdvice" pointcut-ref="allToString"/>
+
+            <!-- This is the same as: @AfterReturning(pointcut="args(name)", returning="returnArg") -->
+            <aop:after-returning method="afterReturnPointCutAdvice" arg-names="name,returnArg" pointcut="args(name)" returning="returnArg"/>
+        </aop:aspect>
+        
+    </aop:config>
+
+</beans>
